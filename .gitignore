@@ -1,0 +1,4 @@
+mysql_data/
+mongo_data/
+.DS_Store
+*.log
