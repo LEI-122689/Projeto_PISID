@@ -2,10 +2,17 @@
 -- version 5.2.3
 -- https://www.phpmyadmin.net/
 --
+<<<<<<<< HEAD:pisid.sql
 -- Host: MySQL
 -- Tempo de geração: 17-Mar-2026 às 12:48
 -- Versão do servidor: 8.0.45
 -- versão do PHP: 8.3.30
+========
+-- Host: 127.0.0.1
+-- Tempo de geração: 17-Mar-2026 às 13:26
+-- Versão do servidor: 10.4.32-MariaDB
+-- versão do PHP: 8.2.12
+>>>>>>>> 194cde78acdfe303699b0ab0cda25125a57f1f31:pisid_maze(1).sql
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -45,12 +52,22 @@ DELIMITER ;
 --
 
 CREATE TABLE `medicoes_passagens` (
+<<<<<<<< HEAD:pisid.sql
   `IDMedicao` int NOT NULL,
   `Hora` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `SalaOrigem` int DEFAULT NULL,
   `SalaDestino` int DEFAULT NULL,
   `Marsami` int DEFAULT NULL,
   `Status` int DEFAULT NULL
+========
+  `IDMedicao` int(11) NOT NULL,
+  `IDSimulacao` int(11) DEFAULT NULL,
+  `Hora` timestamp NOT NULL DEFAULT current_timestamp(),
+  `SalaOrigem` int(11) DEFAULT NULL,
+  `SalaDestino` int(11) DEFAULT NULL,
+  `Marsami` int(11) DEFAULT NULL,
+  `Status` int(11) DEFAULT NULL
+>>>>>>>> 194cde78acdfe303699b0ab0cda25125a57f1f31:pisid_maze(1).sql
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -164,8 +181,14 @@ CREATE TABLE `simulacao` (
 --
 
 CREATE TABLE `som` (
+<<<<<<<< HEAD:pisid.sql
   `ID` int NOT NULL,
   `Hora` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+========
+  `ID` int(11) NOT NULL,
+  `IDSimulacao` int(11) DEFAULT NULL,
+  `Hora` timestamp NOT NULL DEFAULT current_timestamp(),
+>>>>>>>> 194cde78acdfe303699b0ab0cda25125a57f1f31:pisid_maze(1).sql
   `Leitura` decimal(6,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -176,8 +199,14 @@ CREATE TABLE `som` (
 --
 
 CREATE TABLE `temperatura` (
+<<<<<<<< HEAD:pisid.sql
   `ID` int NOT NULL,
   `Hora` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+========
+  `ID` int(11) NOT NULL,
+  `IDSimulacao` int(11) DEFAULT NULL,
+  `Hora` timestamp NOT NULL DEFAULT current_timestamp(),
+>>>>>>>> 194cde78acdfe303699b0ab0cda25125a57f1f31:pisid_maze(1).sql
   `Leitura` decimal(6,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -204,7 +233,8 @@ CREATE TABLE `utilizador` (
 -- Índices para tabela `medicoes_passagens`
 --
 ALTER TABLE `medicoes_passagens`
-  ADD PRIMARY KEY (`IDMedicao`);
+  ADD PRIMARY KEY (`IDMedicao`),
+  ADD KEY `fk_medicoes_simulacao` (`IDSimulacao`);
 
 --
 -- Índices para tabela `mensagens`
@@ -235,13 +265,15 @@ ALTER TABLE `simulacao`
 -- Índices para tabela `som`
 --
 ALTER TABLE `som`
-  ADD PRIMARY KEY (`ID`);
+  ADD PRIMARY KEY (`ID`),
+  ADD KEY `fk_som_simulacao` (`IDSimulacao`);
 
 --
 -- Índices para tabela `temperatura`
 --
 ALTER TABLE `temperatura`
-  ADD PRIMARY KEY (`ID`);
+  ADD PRIMARY KEY (`ID`),
+  ADD KEY `fk_temperatura_simulacao` (`IDSimulacao`);
 
 --
 -- Índices para tabela `utilizador`
@@ -295,10 +327,28 @@ ALTER TABLE `temperatura`
 --
 
 --
+-- Limitadores para a tabela `medicoes_passagens`
+--
+ALTER TABLE `medicoes_passagens`
+  ADD CONSTRAINT `fk_medicoes_simulacao` FOREIGN KEY (`IDSimulacao`) REFERENCES `simulacao` (`IDSimulacao`) ON DELETE CASCADE;
+
+--
 -- Limitadores para a tabela `simulacao`
 --
 ALTER TABLE `simulacao`
   ADD CONSTRAINT `fk_equipa_utilizador` FOREIGN KEY (`Equipa`) REFERENCES `utilizador` (`Equipa`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Limitadores para a tabela `som`
+--
+ALTER TABLE `som`
+  ADD CONSTRAINT `fk_som_simulacao` FOREIGN KEY (`IDSimulacao`) REFERENCES `simulacao` (`IDSimulacao`) ON DELETE CASCADE;
+
+--
+-- Limitadores para a tabela `temperatura`
+--
+ALTER TABLE `temperatura`
+  ADD CONSTRAINT `fk_temperatura_simulacao` FOREIGN KEY (`IDSimulacao`) REFERENCES `simulacao` (`IDSimulacao`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
