@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.3
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Tempo de geração: 09-Mar-2026 às 19:25
--- Versão do servidor: 10.4.32-MariaDB
--- versão do PHP: 8.2.12
+-- Host: MySQL
+-- Tempo de geração: 17-Mar-2026 às 12:48
+-- Versão do servidor: 8.0.45
+-- versão do PHP: 8.3.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,8 +18,25 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Banco de dados: `pisid_maze`
+-- Base de dados: `pisid`
 --
+
+DELIMITER $$
+--
+-- Procedimentos
+--
+CREATE DEFINER=`root`@`%` PROCEDURE `UpdateUserName` (IN `requester_email` VARCHAR(50), IN `target_email` VARCHAR(50), IN `new_name` VARCHAR(100))   BEGIN
+    IF requester_email != target_email THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Acesso negado: O utilizador não tem permissão para alterar este registo.';
+    ELSE
+        UPDATE utilizador
+        SET Nome = new_name
+        WHERE Email = target_email;
+    END IF;
+END$$
+
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -28,16 +45,16 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `medicoes_passagens` (
-  `IDMedicao` int(11) NOT NULL,
-  `Hora` timestamp NOT NULL DEFAULT current_timestamp(),
-  `SalaOrigem` int(11) DEFAULT NULL,
-  `SalaDestino` int(11) DEFAULT NULL,
-  `Marsami` int(11) DEFAULT NULL,
-  `Status` int(11) DEFAULT NULL
+  `IDMedicao` int NOT NULL,
+  `Hora` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `SalaOrigem` int DEFAULT NULL,
+  `SalaDestino` int DEFAULT NULL,
+  `Marsami` int DEFAULT NULL,
+  `Status` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Acionadores `medicoes_passagens`
+-- Triggers `medicoes_passagens`
 --
 DELIMITER $$
 CREATE TRIGGER `Trg_AtualizaOcupacao` AFTER INSERT ON `medicoes_passagens` FOR EACH ROW BEGIN
@@ -82,14 +99,14 @@ DELIMITER ;
 --
 
 CREATE TABLE `mensagens` (
-  `ID` int(11) NOT NULL,
-  `Hora` timestamp NOT NULL DEFAULT current_timestamp(),
-  `Sala` int(11) DEFAULT NULL,
-  `Sensor` varchar(10) DEFAULT NULL,
+  `ID` int NOT NULL,
+  `Hora` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Sala` int DEFAULT NULL,
+  `Sensor` varchar(10) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `Leitura` decimal(6,2) DEFAULT NULL,
-  `TipoAlerta` varchar(50) DEFAULT NULL,
-  `Msg` varchar(100) DEFAULT NULL,
-  `HoraEscrita` timestamp NOT NULL DEFAULT current_timestamp()
+  `TipoAlerta` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `Msg` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `HoraEscrita` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -99,11 +116,33 @@ CREATE TABLE `mensagens` (
 --
 
 CREATE TABLE `ocupacao_labirinto` (
-  `IDJogo` int(11) NOT NULL,
-  `Sala` int(11) NOT NULL,
-  `NumeroMarsamisOdd` int(11) DEFAULT 0,
-  `NumeroMarsamisEven` int(11) DEFAULT 0
+  `IDJogo` int NOT NULL,
+  `Sala` int NOT NULL,
+  `NumeroMarsamisOdd` int DEFAULT '0',
+  `NumeroMarsamisEven` int DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura da tabela `setup_maze`
+--
+
+CREATE TABLE `setup_maze` (
+  `IDSetup` int NOT NULL,
+  `NumberRooms` int DEFAULT NULL,
+  `NumberMarsamis` int DEFAULT NULL,
+  `NormalTemperature` decimal(5,2) DEFAULT NULL,
+  `LimitTemperature` decimal(5,2) DEFAULT NULL,
+  `DataConfiguracao` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+
+--
+-- Extraindo dados da tabela `setup_maze`
+--
+
+INSERT INTO `setup_maze` (`IDSetup`, `NumberRooms`, `NumberMarsamis`, `NormalTemperature`, `LimitTemperature`, `DataConfiguracao`) VALUES
+(1, 10, 30, 20.00, 35.00, '2026-03-12 18:12:51');
 
 -- --------------------------------------------------------
 
@@ -112,10 +151,10 @@ CREATE TABLE `ocupacao_labirinto` (
 --
 
 CREATE TABLE `simulacao` (
-  `IDSimulacao` int(11) NOT NULL,
-  `Descricao` text DEFAULT NULL,
-  `Equipa` int(11) DEFAULT NULL,
-  `DataHoraInicio` timestamp NOT NULL DEFAULT current_timestamp()
+  `IDSimulacao` int NOT NULL,
+  `Descricao` text COLLATE utf8mb4_general_ci,
+  `Equipa` int DEFAULT NULL,
+  `DataHoraInicio` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -125,8 +164,8 @@ CREATE TABLE `simulacao` (
 --
 
 CREATE TABLE `som` (
-  `ID` int(11) NOT NULL,
-  `Hora` timestamp NOT NULL DEFAULT current_timestamp(),
+  `ID` int NOT NULL,
+  `Hora` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `Leitura` decimal(6,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -137,8 +176,8 @@ CREATE TABLE `som` (
 --
 
 CREATE TABLE `temperatura` (
-  `ID` int(11) NOT NULL,
-  `Hora` timestamp NOT NULL DEFAULT current_timestamp(),
+  `ID` int NOT NULL,
+  `Hora` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `Leitura` decimal(6,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -149,12 +188,12 @@ CREATE TABLE `temperatura` (
 --
 
 CREATE TABLE `utilizador` (
-  `Email` varchar(50) NOT NULL,
-  `Nome` varchar(100) DEFAULT NULL,
-  `Telemovel` varchar(12) DEFAULT NULL,
+  `Email` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `Nome` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `Telemovel` varchar(12) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `DataNascimento` date DEFAULT NULL,
-  `Equipa` int(11) DEFAULT NULL,
-  `Tipo` varchar(3) DEFAULT NULL
+  `Equipa` int DEFAULT NULL,
+  `Tipo` varchar(3) COLLATE utf8mb4_general_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -178,6 +217,12 @@ ALTER TABLE `mensagens`
 --
 ALTER TABLE `ocupacao_labirinto`
   ADD PRIMARY KEY (`IDJogo`,`Sala`);
+
+--
+-- Índices para tabela `setup_maze`
+--
+ALTER TABLE `setup_maze`
+  ADD PRIMARY KEY (`IDSetup`);
 
 --
 -- Índices para tabela `simulacao`
@@ -213,31 +258,37 @@ ALTER TABLE `utilizador`
 -- AUTO_INCREMENT de tabela `medicoes_passagens`
 --
 ALTER TABLE `medicoes_passagens`
-  MODIFY `IDMedicao` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `IDMedicao` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de tabela `mensagens`
 --
 ALTER TABLE `mensagens`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de tabela `setup_maze`
+--
+ALTER TABLE `setup_maze`
+  MODIFY `IDSetup` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de tabela `simulacao`
 --
 ALTER TABLE `simulacao`
-  MODIFY `IDSimulacao` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `IDSimulacao` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de tabela `som`
 --
 ALTER TABLE `som`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de tabela `temperatura`
 --
 ALTER TABLE `temperatura`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ID` int NOT NULL AUTO_INCREMENT;
 
 --
 -- Restrições para despejos de tabelas
