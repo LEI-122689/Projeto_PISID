@@ -1,32 +1,51 @@
+import time
+import pymongo
 import mysql.connector
 
-try:
-    ligacao = mysql.connector.connect(
-        host="194.210.86.10",
-        user="aluno",
-        password="aluno",
-        database="maze"
-    )
+mongo_client = pymongo.MongoClient("mongodb://localhost:27017/")
+mongo_database = mongo_client["pisid_maze"]
+mongo_collection = mongo_database["sensor_data"]
 
-    if ligacao.is_connected():
-        print("Sucesso: Ligado ao MySQL da Nuvem!")
+while True:
+    try:
+        mysql_connection = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="root",
+            database="pisid_maze",
+            port=3306
+        )
+        mysql_cursor = mysql_connection.cursor()
 
-        # 2. Criar um "cursor" (é como o ponteiro do rato para escolher dados)
-        cursor = ligacao.cursor()
+        new_records = mongo_collection.find({"migrated": {"$ne": True}})
 
-        # 3. Executar o comando para ler a configuração do labirinto
-        cursor.execute("SELECT * FROM setupmaze")
+        for record in new_records:
+            try:
+                room_origin = record.get("RoomOrigin")
+                room_destiny = record.get("RoomDestiny")
+                marsami = record.get("Marsami")
+                status = record.get("Status")
 
-        # 4. Ir buscar os resultados e mostrá-los
-        configuracao = cursor.fetchall()
-        for linha in configuracao:
-            print(linha)
+                insert_query = """
+                               INSERT INTO medicoes_passagens (SalaOrigem, SalaDestino, Marsami, Status)
+                               VALUES (%s, %s, %s, %s) \
+                               """
+                values = (room_origin, room_destiny, marsami, status)
 
-except Exception as erro:
-    print(f"Erro na ligação: {erro}")
+                mysql_cursor.execute(insert_query, values)
+                mysql_connection.commit()
 
-finally:
-    # 5. Fechar sempre a porta quando terminamos
-    if 'ligacao' in locals() and ligacao.is_connected():
-        cursor.close()
-        ligacao.close()
+                update_filter = {"_id": record["_id"]}
+                update_action = {"$set": {"migrated": True}}
+                mongo_collection.update_one(update_filter, update_action)
+
+            except mysql.connector.Error:
+                continue
+
+        mysql_cursor.close()
+        mysql_connection.close()
+
+    except mysql.connector.Error:
+        pass
+
+    time.sleep(5)
