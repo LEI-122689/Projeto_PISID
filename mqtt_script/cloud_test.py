@@ -10,9 +10,9 @@ while True:
     try:
         mysql_connection = mysql.connector.connect(
             host="localhost",
-            user="root",
-            password="root",
-            database="pisid_maze",
+            user="etl_user",
+            password="etl_password",
+            database="pisid",
             port=3306
         )
         mysql_cursor = mysql_connection.cursor()
